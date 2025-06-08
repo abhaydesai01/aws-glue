@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SalesCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: sales-orders-crawler
+      Role: 
+        Fn::GetAtt: [GlueServiceRole, Arn]
+      DatabaseName: sales_db
+      Targets:
+        S3Targets:
+          - Path: s3://your-org-sales-landing/
+      SchemaChangePolicy:
+        UpdateBehavior: UPDATE_IN_DATABASE
+        DeleteBehavior: LOG
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_EVERYTHING
+  GlueServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole

@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  SalesETLJob:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: sales-orders-etl
+      Role: 
+        Fn::GetAtt: [GlueServiceRole, Arn]
+      Command:
+        Name: glueetl
+        ScriptLocation: s3://your-org-glue-scripts/etl/sales_etl.py
+      DefaultArguments:
+        --INPUT_PATH: s3://your-org-sales-landing/
+        --OUTPUT_PATH: s3://your-org-sales-processed/

@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: orders-api
+  template:
+    metadata:
+      labels:
+        app: orders-api
+    spec:
+      containers:
+      - name: orders-api
+        image: 756999892440.dkr.ecr.us-east-1.amazonaws.com/orders-api:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: AWS_REGION
+          value: ap-south-1
