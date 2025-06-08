@@ -22,7 +22,7 @@ pipeline {
     stage('Dockerize & Push') {
       steps {
         script {
-          IMAGE_TAG = "${env.GIT_COMMIT.take(8)}"
+          def IMAGE_TAG = "${env.GIT_COMMIT.take(8)}"
         }
         withAWS(credentials: AWS_CREDENTIALS, region: AWS_REGION) {
           sh """
