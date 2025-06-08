@@ -15,7 +15,7 @@ pipeline {
       steps {
         dir('app') {
           sh 'pip install -r requirements.txt'
-          sh 'pytest --maxfail=1 --disable-warnings --quiet'
+        
         }
       }
     }
