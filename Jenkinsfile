@@ -14,23 +14,9 @@ pipeline {
       }
     }
 
-    stage('Build & Test') {
+    stage('Build & Push') {
       steps {
-        dir('app') {
-          sh 'pip install -r requirements.txt'
-          // add tests here if you have any, e.g. pytest
-        }
-      }
-    }
-
-    stage('Dockerize & Push') {
-      steps {
-        // Compute and export IMAGE_TAG
-        script {
-          env.IMAGE_TAG = env.GIT_COMMIT.take(8)
-        }
-
-        // Inject AWS credentials for ECR
+        script { env.IMAGE_TAG = env.GIT_COMMIT.take(8) }
         withCredentials([usernamePassword(
           credentialsId: 'aws-glue-iam',
           usernameVariable: 'AWS_ACCESS_KEY_ID',
@@ -51,13 +37,18 @@ pipeline {
 
     stage('Deploy to EKS') {
       steps {
-        // Inject the kubeconfig file into $KUBECONFIG
+        // Use your uploaded kubeconfig file directly—no update-kubeconfig
         withCredentials([file(
           credentialsId: 'eks-kubeconfig',
           variable: 'KUBECONFIG'
         )]) {
           sh '''
             set -e
+            kubectl --kubeconfig="$KUBECONFIG" apply -f k8s/deployment.yaml \
+              --validate=false -n default
+            kubectl --kubeconfig="$KUBECONFIG" apply -f k8s/service.yaml \
+              --validate=false -n default
+
             kubectl --kubeconfig="$KUBECONFIG" -n default set image \
               deployment/orders-api orders-api="$ECR_REPO:$IMAGE_TAG"
             kubectl --kubeconfig="$KUBECONFIG" -n default rollout status \
@@ -69,7 +60,6 @@ pipeline {
 
     stage('Glue Crawler & ETL') {
       steps {
-        // Inject AWS credentials again for Glue
         withCredentials([usernamePassword(
           credentialsId: 'aws-glue-iam',
           usernameVariable: 'AWS_ACCESS_KEY_ID',
@@ -91,7 +81,7 @@ pipeline {
       echo "✅ Pipeline completed successfully!"
     }
     failure {
-      echo "❌ Pipeline failed—check the console output for details."
+      echo "❌ Pipeline failed—check console logs for details."
     }
   }
 }
